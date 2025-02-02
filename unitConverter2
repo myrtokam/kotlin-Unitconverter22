@@ -1,0 +1,188 @@
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.example.unitconverter2.ui.theme.UnitConverter2Theme
+import kotlin.math.roundToInt
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+
+        setContent {
+            UnitConverter2Theme {
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    UnitConverter(modifier = Modifier.padding(innerPadding))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun UnitConverter(modifier: Modifier = Modifier) {
+    var inputValue by remember { mutableStateOf("") }
+    var outputValue by remember { mutableStateOf("") }
+    var inputUnit by remember { mutableStateOf("Centimeters") }
+    var outputUnit by remember { mutableStateOf("Meters") }
+    var iExpanded by remember { mutableStateOf(false) }
+    var oExpanded by remember { mutableStateOf(false) }
+    val conversionFactor = remember { mutableStateOf(1.00) }
+    val oConversionFactor = remember { mutableStateOf(1.00) }
+
+    fun convertUnits() {
+        val inputValueDouble = inputValue.toDoubleOrNull() ?: 0.0
+        val result = (inputValueDouble * conversionFactor.value * 100.0 / oConversionFactor.value)
+            .roundToInt() / 100.0
+        outputValue = result.toString()
+    }
+
+
+
+        // **Τοποθετούμε την Column μέσα στο Box**
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("Unit Converter", color = Color.White)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = inputValue,
+                onValueChange = {
+                    inputValue = it
+                    convertUnits()
+                },
+                label = { Text("Enter value", color = Color.White) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.White
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row {
+                Box {
+                    Button(
+                        onClick = { iExpanded = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+                    ) {
+                        Text(inputUnit, color = Color.White)
+                        Icon(
+                            Icons.Default.ArrowDropDown,
+                            contentDescription = "Arrow Down",
+                            tint = Color.White
+                        )
+                    }
+                    DropdownMenu(expanded = iExpanded, onDismissRequest = { iExpanded = false }) {
+                        DropdownMenuItem(
+                            text = { Text("Centimeters") },
+                            onClick = {
+                                iExpanded = false
+                                inputUnit = "Centimeters"
+                                conversionFactor.value = 0.1
+                                convertUnits()
+                            }
+                        )
+
+                        DropdownMenuItem(
+                            text = { Text("Meters") },
+                            onClick = {
+                                iExpanded = false
+                                inputUnit = "Meters"
+                                conversionFactor.value = 1.0
+                                convertUnits()
+                            }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(20.dp))
+
+                Box {
+                    Button(
+                        onClick = { oExpanded = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+                    ) {
+                        Text(outputUnit, color = Color.White)
+                        Icon(
+                            Icons.Default.ArrowDropDown,
+                            contentDescription = "Arrow Down",
+                            tint = Color.White
+                        )
+                    }
+                    DropdownMenu(expanded = oExpanded, onDismissRequest = { oExpanded = false }) {
+                        val units = mapOf(
+                            "Centimeters" to 0.01,
+                            "Meters" to 1.00,
+                            "Millimeters" to 0.001,
+                            "Feet" to 0.3048
+                        )
+
+                        units.forEach { (unit, factor) ->
+                            DropdownMenuItem(
+                                text = { Text(unit) },
+                                onClick = {
+                                    oExpanded = false
+                                    outputUnit = unit
+                                    oConversionFactor.value = factor
+                                    convertUnits()
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // **Πλαίσιο για την εμφάνιση του αποτελέσματος**
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .padding(16.dp)
+                    .height(50.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Card(
+                    modifier = Modifier.fillMaxSize(),
+                    colors = CardDefaults.cardColors(containerColor = Color.Black),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Result: $outputValue $outputUnit",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        }
+    }
